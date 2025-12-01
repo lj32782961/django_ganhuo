@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% trans "Article List" %}</title>
+    <title>{% trans "文章列表" %}</title>
     <script src="{% static 'js/lang.js' %}"></script>
      <link rel="stylesheet" href="{% static 'css/style.css' %}"  type="text/css">
 </head>
@@ -15,7 +15,7 @@
         <span id="language-button">🌍  <span id="current-language">  {{ current_language_name  }} </span></span>
         <ul id="language-dropdown" class="hidden">
             <li><a href="{% url 'switch_language' 'en' %}" >English</a></li>
-            <li><a href="{% url 'switch_language' 'zh-hans' %}" >中文</a></li>
+            <li><a href="{% url 'switch_language' 'zh-cn' %}" >简体中文</a></li>
             <li><a href="{% url 'switch_language' 'de' %}" >Deutsch</a></li>
             <li><a href="{% url 'switch_language' 'fr' %}">Français</a></li>
         </ul>
@@ -23,28 +23,28 @@
     
     <!-- 在内容列表上方添加搜索框 -->
     <form method="get">
-        <input type="text" name="q" value="{{ search_query }}" placeholder="{% trans 'Search articles...' %}">
-        <button type="submit">{% trans 'search' %}</button>
+        <input type="text" name="q" value="{{ search_query }}" placeholder="{% trans '搜索文章...' %}">
+        <button type="submit">{% trans '搜索' %}</button>
         <!-- <a href="{% url 'article_list' %}"><button type="button">清除</button></a> -->
     </form>
     
     <div class="tag-cloud">
-        <h3>{% trans "Tags" %}</h3>
+        <h3>{% trans "标签云" %}</h3>
         {% for tag in all_tags %}
             <a href="?tag={{ tag.name }}" class="tag">{{ tag.name }}</a>
             <!-- <a href="?tag={{ tag.name }}&q={{search_query}}" class="tag">{{ tag.name }}</a> -->
         {% endfor %}
     </div>
-    <a href="{% url 'article_list' %}"><button type="button">{% trans "Clear Search" %}</button></a>
+    <a href="{% url 'article_list' %}"><button type="button">{% trans "清除搜索" %}</button></a>
 
-    <h1>{% trans "Latest Articles" %}</h1>
+    <h1>{% trans "最新文章" %}</h1>
     {% if no_results %}
-    <p>{% trans "No results found, please try a different keyword." %}</p>
+    <p>{% trans "无结果，请换个关键词再次尝试" %}</p>
     {% else %}
         {% for article in page_obj %}
         <div>
             <h2><a href="{% url 'article_detail' article.pk %}">{{ article.title }}</a></h2>
-            <p>{% trans "Published on" %}: {{ article.pub_date|date:"Y-m-d H:i" }}, {% trans "Tags" %}：
+            <p>{% trans "发布日期" %}: {{ article.pub_date|date:"Y-m-d H:i" }}, {% trans "标签" %}：
                 {% if article.tag.all %}
                     {% for tag in article.tag.all %}
                         <a class="tag-cloud" href="?tag={{ tag.name }}">{{ tag.name }}</a>{% if not forloop.last %}, {% endif %}
@@ -61,15 +61,15 @@
     <!-- 添加分页导航 -->
     <div class="pagination">
         {% if page_obj.has_previous %}
-            <a href="?page=1&q={{ search_query }}&tag={{ tag_filter }}">{% trans "First Page" %}</a>
-            <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "Previous" %}</a>
+            <a href="?page=1&q={{ search_query }}&tag={{ tag_filter }}">{% trans "首页" %}</a>
+            <a href="?page={{ page_obj.previous_page_number }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "上一页" %}</a>
         {% endif %}
         
-        <span>{% trans "Page" %} {{ page_obj.number }} {% trans " " %} / {{ page_obj.paginator.num_pages }} </span>
+        <span>{% trans "第" %} {{ page_obj.number }} {% trans "页" %} / {{ page_obj.paginator.num_pages }} </span>
         
         {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "Next" %}</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "Last Page" %}</a>
+            <a href="?page={{ page_obj.next_page_number }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "下一页" %}</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}&q={{ search_query }}&tag={{ tag_filter }}">{% trans "末页" %}</a>
         {% endif %}
     {% endif %}
 </div>

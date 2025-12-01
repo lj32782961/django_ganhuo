@@ -1,37 +1,41 @@
-from django.shortcuts import render, redirect,get_object_or_404
+from django.shortcuts import render, redirect, get_object_or_404
 from .models import Article, Tag
-from django.http import HttpResponse
-from django.core.paginator import Paginator,PageNotAnInteger, EmptyPage
+from django.http import HttpResponse, HttpResponseRedirect
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db.models import Q
 import datetime
 from django.utils import timezone
 from django.conf import settings
 from django.utils.translation import activate
 
+
 def article_list(request):
+    # create_german_article()#自动生成内容
+
     # 获取热门文章（可根据阅读量排序）
-    hot_articles = Article.objects.all().order_by('-views')[:5]
+    hot_articles = Article.objects.all().order_by("-views")[:5]
 
-    search_query = request.GET.get('q', '')
-    tag_filter = request.GET.get('tag', '')
+    search_query = request.GET.get("q", "")
+    tag_filter = request.GET.get("tag", "")
 
-    articles = Article.objects.all().order_by('-pub_date')
+    articles = Article.objects.all().order_by("-pub_date")
 
     # 搜索过滤
     if search_query:
         query_obj = Q()
-        query_obj |=Q(title__icontains=search_query)|Q(content__icontains=search_query)
+        query_obj |= Q(title__icontains=search_query) | Q(
+            content__icontains=search_query
+        )
 
-        articles = articles.filter(query_obj).order_by('-pub_date')
-
+        articles = articles.filter(query_obj).order_by("-pub_date")
 
     # 标签过滤
     if tag_filter:
-        articles = articles.filter(tag__name=tag_filter).order_by('-pub_date')
+        articles = articles.filter(tag__name=tag_filter).order_by("-pub_date")
 
     # 分页
     paginator = Paginator(articles, 10)  # 每页10条
-    page_number = request.GET.get('page')
+    page_number = request.GET.get("page")
     # 防止在输入无效页码时程序崩溃。 现在如果输入的页码无效，则会显示第一页或最后一页的内容。
     try:
         page_obj = paginator.get_page(page_number)
@@ -40,63 +44,69 @@ def article_list(request):
     except EmptyPage:
         page_obj = paginator.get_page(paginator.num_pages)
 
-
     # 检查搜索结果是否为空
     no_results = False
     if not page_obj.object_list:
         no_results = True
 
-    #标签云
+    # 标签云
     all_tags = Tag.objects.all()
 
-    #语言设置
+    # 语言设置
     # current_language_name = dict(settings.LANGUAGES).get(request.LANGUAGE_CODE, '')
 
-
     context = {
-        'page_obj': page_obj,
-        'search_query': search_query,
-        'tag_filter': tag_filter,
-        'all_tags': all_tags,
-        'no_results': no_results,
-        'hot_articles':hot_articles,
-        
+        "page_obj": page_obj,
+        "search_query": search_query,
+        "tag_filter": tag_filter,
+        "all_tags": all_tags,
+        "no_results": no_results,
+        "hot_articles": hot_articles,
     }
-    return render(request, 'app/article_list.html', context)
-    #return render(request, 'app/article_list.html', {'articles': articles})
+    return render(request, "app/article_list.html", context)
+    # return render(request, 'app/article_list.html', {'articles': articles})
 
 
 # def article_detail(request, pk):
 #     article = get_object_or_404(Article, pk=pk)
 #     return render(request, 'app/article_detail.html', {'article': article})
 
+
 def article_detail(request, pk):
     # 获取热门文章（可根据阅读量排序）
-    hot_articles = Article.objects.all().order_by('-views')[:5]
-    #标签云
+    hot_articles = Article.objects.all().order_by("-views")[:5]
+    # 标签云
     all_tags = Tag.objects.all()
     try:
-        article = Article.objects.get(pk=pk) # 使用get()方法，如果不存在会抛出DoesNotExist异常
-        article.views = article.views+1
-        article.save(update_fields=['views'])  # 只更新views字段，提高效率
+        article = Article.objects.get(
+            pk=pk
+        )  # 使用get()方法，如果不存在会抛出DoesNotExist异常
+        article.views = article.views + 1
+        article.save(update_fields=["views"])  # 只更新views字段，提高效率
 
         context = {
-        'article': article,
-        'all_tags': all_tags,
-        'hot_articles':hot_articles,
-    }
-        return render(request, 'app/article_detail.html', context)
+            "article": article,
+            "all_tags": all_tags,
+            "hot_articles": hot_articles,
+        }
+        return render(request, "app/article_detail.html", context)
     except Article.DoesNotExist:
-        return render(request, 'app/error.html')
+        return render(request, "app/error.html")
     except Exception as e:  # 捕获其他异常
-        return HttpResponse(f"发生了一个未知的错误: {e}") # 返回一个更通用的错误信息，避免泄露详细信息
+        return HttpResponse(
+            f"发生了一个未知的错误: {e}"
+        )  # 返回一个更通用的错误信息，避免泄露详细信息
+
 
 def contact(request):
-    return render(request, 'app/contact.html')
+    return render(request, "app/contact.html")
+
 
 from django.utils import translation
 from django.http import HttpResponseRedirect
-def switch_language(request, lang_code):
+
+
+def switch_language0(request, lang_code):
     """
     切换语言并存入 session
     """
@@ -106,23 +116,92 @@ def switch_language(request, lang_code):
         # 激活当前请求的语言
         translation.activate(lang_code)
         # 存入Session，供后续请求使用
-        request.session['django_language'] = lang_code
+        request.session["django_language"] = lang_code
         # 创建重定向响应
-        response = HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+        response = HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
         # 将语言代码存入Cookie
         response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
         return response
-    return HttpResponseRedirect(request.META.get('HTTP_REFERER', '/'))
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+def switch_language1(request, lang_code):
+    """
+    切换语言并重定向到带有语言代码的 URL
+    """
+    if lang_code in dict(settings.LANGUAGES).keys():  # 确保 lang_code 是支持的语言
+        # 激活当前请求的语言
+        translation.activate(lang_code)
+        # 获取当前 URL 并确保它包含语言代码
+        referer = request.META.get("HTTP_REFERER", "/")
+        # 如果 referer 不包含语言代码，则添加语言代码
+        if not any(lang in referer for lang in dict(settings.LANGUAGES).keys()):
+            referer = f"/{lang_code}{referer}"
+        else:
+            # 如果 referer 已经包含语言代码，则替换为新的语言代码
+            for lang in dict(settings.LANGUAGES).keys():
+                if lang in referer:
+                    referer = referer.replace(f"/{lang}/", f"/{lang_code}/")
+
+                    # 以下为设置session或cookie。也可以不设置，即删除
+                    # 存入Session，供后续请求使用
+                    request.session["django_language"] = lang_code
+                    # 创建重定向响应
+                    response = HttpResponseRedirect(referer)
+                    # 将语言代码存入Cookie
+                    response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
+                    # 以上为设置session或者cookie。
+                    break
+        return HttpResponseRedirect(referer)
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
+
+
+from django.utils import translation
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+
+def switch_language(request, lang_code):
+    """
+    切换语言并重定向到包含语言代码的URL
+    """
+    if lang_code in dict(settings.LANGUAGES).keys():  # 确保 lang_code 是支持的语言
+        # 激活当前请求的语言
+        translation.activate(lang_code)
+        # 存入Session，供后续请求使用
+        request.session["django_language"] = lang_code
+
+        # 获取当前页面的路径（不包括语言代码）
+        referer = request.META.get("HTTP_REFERER", "/")
+        path = referer.split(request.get_host())[-1]  # 获取路径部分
+
+        # 如果路径已经包含语言代码，替换为新的语言代码
+        for code, _ in settings.LANGUAGES:
+            if path.startswith(f"/{code}/"):
+                path = path[len(f"/{code}/") :]
+                break
+
+        # 生成新的URL，包含新的语言代码
+        new_url = f"/{lang_code}/{path}"
+
+        # 创建重定向响应
+        response = HttpResponseRedirect(new_url)
+        # 将语言代码存入Cookie
+        response.set_cookie(settings.LANGUAGE_COOKIE_NAME, lang_code)
+        return response
+    return HttpResponseRedirect(request.META.get("HTTP_REFERER", "/"))
 
 
 def create_german_article():
     title = f"自动生成的标题 {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     abstract = "这是一篇自动生成的摘要。"
-    content = "<p>这是一篇自动生成的RichText内容。</p>"  # RichTextUploadingField 需要 HTML
+    content = (
+        "<p>这是一篇自动生成的RichText内容。</p>"  # RichTextUploadingField 需要 HTML
+    )
     source = "本站"
 
     # 查找或创建标签 (例如，创建一个名为'自动生成'的标签)
-    tag, created = Tag.objects.get_or_create(name='自动生成', slug='auto-generated')
+    tag, created = Tag.objects.get_or_create(name="自动生成", slug="auto-generated")
 
     article = Article(
         title=title,
@@ -131,14 +210,7 @@ def create_german_article():
         source=source,
     )
     article.save()
-    article.tag.add(tag) # 使用 add() 方法添加标签
+    article.tag.add(tag)  # 使用 add() 方法添加标签
+
 
 from django.utils.translation import gettext as _
-
-
-def current_language_name(request):
-    # 从 LANGUAGES 中获取当前语言的名称
-    current_language_name = dict(settings.LANGUAGES).get(request.LANGUAGE_CODE, '')
-    return {
-        'current_language_name': current_language_name,
-    }

@@ -120,11 +120,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
 from django.utils.translation import gettext_lazy as _
-LANGUAGE_CODE = 'zh-hans'#默认语言
+LANGUAGE_CODE = 'zh-cn'#默认语言
 LANGUAGE_COOKIE_NAME = 'django_language'
 LANGUAGES = [
     ('en', _('English')),
-    ('zh-hans', _('简体中文')),
+    ('zh-cn', _('简体中文')),
     ('de', _('Deutsch')),
     ('fr', _('Francés')),
 ]
